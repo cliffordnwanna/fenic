@@ -6,6 +6,8 @@ This module exposes helpers to:
 """
 from typing import List, Optional
 
+from pydantic import ConfigDict, validate_call
+
 from fenic.api.mcp._tool_generation_utils import auto_generate_system_tools_from_tables
 from fenic.api.mcp.tools import (
     SystemToolConfig,
@@ -16,6 +18,7 @@ from fenic.core.mcp._server import FenicMCPServer, MCPTransport
 from fenic.core.mcp.types import UserDefinedTool
 
 
+@validate_call(config=ConfigDict(strict=True, arbitrary_types_allowed=True))
 def create_mcp_server(
     session: Session,
     server_name: str,
@@ -45,9 +48,10 @@ def create_mcp_server(
             )
         )
     if not (user_defined_tools or system_tools):
-        raise ConfigurationError("No tools provided. Either provide tools or set generate_automated_tools=True and provide datasets.")
+        raise ConfigurationError("No tools provided. Either provide `user_defined_tools` or set `system_tools` to create system tools for catalog tables.")
     return FenicMCPServer(session._session_state, user_defined_tools, generated_system_tools, server_name, concurrency_limit)
 
+@validate_call(config=ConfigDict(strict=True, arbitrary_types_allowed=True))
 def run_mcp_server_asgi(
     server: FenicMCPServer,
     *,
@@ -76,6 +80,7 @@ def run_mcp_server_asgi(
     """
     return server.http_app(stateless_http=stateless_http, port=port, host=host, path=path, **kwargs)
 
+@validate_call(config=ConfigDict(strict=True, arbitrary_types_allowed=True))
 def run_mcp_server_sync(
     server: FenicMCPServer,
     *,
@@ -102,6 +107,7 @@ def run_mcp_server_sync(
     server.run(transport=transport, stateless_http=stateless_http, port=port, host=host, path=path, **kwargs)
 
 
+@validate_call(config=ConfigDict(strict=True, arbitrary_types_allowed=True))
 async def run_mcp_server_async(
     server: FenicMCPServer,
     *,
